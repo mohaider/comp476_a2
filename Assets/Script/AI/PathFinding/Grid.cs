@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 
-namespace Assets.Scripts.AI.PathFinding
+namespace Assets.Script.AI.PathFinding
 {
     public class Grid : MonoBehaviour
     {
@@ -11,14 +11,16 @@ namespace Assets.Scripts.AI.PathFinding
         Node[,] grid;
         [SerializeField]
         private Vector2 worldSize; //our area in the world
+        [SerializeField]
+        private Transform _player; //position of the player in the world
 
         [SerializeField]
-        private float _nodeDiameter;
+        private float _nodeDiameter; //diameter of the node. 
 
         [SerializeField]
         private float _nodeRadius;
 
-        [SerializeField] private LayerMask UnwalkableMask;
+        [SerializeField] private LayerMask UnwalkableMask; 
 
         [SerializeField] private int GridSizeX, GridSizeY;
 
@@ -67,6 +69,19 @@ namespace Assets.Scripts.AI.PathFinding
 
         }
 
+        public Node QuantizePosition(Vector3 worldPosition)
+        {
+            float percentX = (worldPosition.x -transform.position.x  + worldSize.x/2)/worldSize.x;
+            float percentY = (worldPosition.z - transform.position.z + worldSize.y / 2) / worldSize.y;
+
+            percentX = Mathf.Clamp01(percentX);
+            percentY = Mathf.Clamp01(percentY);
+
+            int x = Mathf.RoundToInt((GridSizeX - 1) * percentX);
+            int y = Mathf.RoundToInt((GridSizeY - 1) * percentY);
+            print("x "+x+" y"+y);
+            return grid[x, y];
+        }
 
 
 
@@ -79,14 +94,19 @@ namespace Assets.Scripts.AI.PathFinding
         void OnDrawGizmos()
         {
             Gizmos.DrawWireCube(transform.position,new Vector3(worldSize.x,1f,worldSize.y));
+          
             //draw walkable paths
             if(grid !=null)
-            foreach (Node n in grid)
+            {
+                Node playernode = QuantizePosition(_player.position);
+                foreach (Node n in grid)
             {
                 Gizmos.color = (n.IsWalkable ? Color.white : Color.red);
+                if (playernode == n)
+                    Gizmos.color = Color.green;
                 Gizmos.DrawCube(n.WorldPosition, Vector3.one * (_nodeDiameter-.1f));
 
-            }
+            }}
         }
         #endregion
 

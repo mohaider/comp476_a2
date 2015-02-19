@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-namespace Assets.Scripts.AI.PathFinding
+namespace Assets.Script.AI.PathFinding
 {
     public class Node
     {
