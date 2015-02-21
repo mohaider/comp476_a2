@@ -21,7 +21,7 @@ namespace Assets.AI.KinematicsAndSteering
             steering.Linear = target.transform.position - transform.position;
             steering.Linear.Normalize();
             steering.Linear *= maxAcceleration;
-            steering.Angular = 0;
+         //   steering.Angular = 0;
         }
         // Update is called once per frame
         void Update()

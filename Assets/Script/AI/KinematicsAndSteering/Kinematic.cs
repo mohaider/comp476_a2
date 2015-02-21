@@ -1,6 +1,10 @@
 ﻿using UnityEngine;
 using Assets.Script.Tools;
-
+/**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
 namespace Assets.AI.KinematicsAndSteering
 {
     public class Kinematic : MonoBehaviour

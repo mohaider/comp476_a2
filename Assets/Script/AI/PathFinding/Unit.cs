@@ -1,6 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+using Assets.Script.AI.KinematicsAndSteering;
+using Assets.Script.AI.PathFinding;
+/**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
 public class Unit : MonoBehaviour
 {
 
@@ -11,6 +18,9 @@ public class Unit : MonoBehaviour
     [SerializeField] private float _lineHeight = 5f;
     private Vector3[] path;
     private int targetIndex;
+    private Arrive arrive;
+    public GameObject holder;
+    [SerializeField] private float arriveRadius;
     
 
 
@@ -22,6 +32,7 @@ public class Unit : MonoBehaviour
 
     public void OnPathFound(Vector3[] newPath, bool isSuccesfull)
     {
+
         if (isSuccesfull)
         {
             path = newPath;
@@ -34,18 +45,26 @@ public class Unit : MonoBehaviour
     IEnumerator FollowPath()
     {
         Vector3 currentWayPoint = path[0];
+        holder.transform.position = currentWayPoint;
+        //arrive.target = holder;
         while (true)
         {
-            if (transform.position == currentWayPoint)
+            Vector3 direction = transform.position - currentWayPoint;
+            if (direction.magnitude <arriveRadius)
             {
                 targetIndex++;
+                print(targetIndex);
                 if (targetIndex >= path.Length)
                 {
                     yield break;
                 }
                 currentWayPoint = path[targetIndex];
+                holder.transform.position = currentWayPoint;
             }
-            transform.position = Vector3.MoveTowards(transform.position, currentWayPoint, speed*Time.deltaTime);
+            print(currentWayPoint);
+            arrive.target = holder;
+           // transform.position = Vector3.MoveTowards(transform.position, currentWayPoint, speed*Time.deltaTime);
+            
             yield return null;
         }
 
@@ -54,16 +73,21 @@ public class Unit : MonoBehaviour
 
     void Start()
     {
+       arrive = GetComponent<Arrive>();
+       GameObject a = GameObject.FindGameObjectWithTag("gridMaker");
+        arriveRadius = a.GetComponent<Grid>().NodeRadius;
+    arrive.target = holder;
         PathRequestManager.RequestPath(transform.position, target.position,OnPathFound);
     }
 
     void OnDrawGizmos()
     {
-        if (path != null)
+        bool pathIsnull = (path == null);
+        if (!pathIsnull)
         {
             for (int i = targetIndex; i < path.Length; i++)
             {
-                Gizmos.color = Color.black;
+                Gizmos.color = Color.yellow;
                 Gizmos.DrawCube(path[i],Vector3.one);
 
                 if (i == targetIndex)

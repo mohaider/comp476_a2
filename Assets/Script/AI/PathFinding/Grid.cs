@@ -3,7 +3,11 @@ using UnityEngine;
 using System.Collections.Generic;
 
 namespace Assets.Script.AI.PathFinding
-{
+{/**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
     public class Grid : MonoBehaviour
     {
         public bool displayGridGizmos ;
@@ -40,6 +44,18 @@ namespace Assets.Script.AI.PathFinding
         {
             get { return GridSizeX * GridSizeY; }
 
+        }
+
+        public float NodeDiameter
+        {
+            get { return _nodeDiameter; }
+            set { _nodeDiameter = value; }
+        }
+
+        public float NodeRadius
+        {
+            get { return _nodeRadius; }
+            set { _nodeRadius = value; }
         }
 
         [SerializeField]

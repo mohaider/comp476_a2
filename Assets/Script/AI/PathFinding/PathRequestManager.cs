@@ -2,7 +2,11 @@
 using System.Collections.Generic; //to use a queue to store all the requests
 using System;
 using Assets.Script.AI.PathFinding;
-
+/**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
 public class PathRequestManager : MonoBehaviour
 {
 

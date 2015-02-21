@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Assets.Scripts.Tools
+namespace Assets.Script.Tools
 {
     class RandomNums
     {
@@ -48,6 +48,11 @@ namespace Assets.Scripts.Tools
         {
             return (sigma * RandomNums.NextGaussianFloat() + mean);
 
+        }
+
+        public static float RandomBinomial()
+        {
+            return UnityEngine.Random.Range(0f, 1f) - UnityEngine.Random.Range(0f, 1f);
         }
 
     }

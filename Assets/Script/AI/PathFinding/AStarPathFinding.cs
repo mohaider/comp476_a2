@@ -7,6 +7,11 @@ using System;
 
 namespace Assets.Script.AI.PathFinding
 {
+    /**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
     public class AStarPathFinding : MonoBehaviour
     {
         #region class variables and properties

@@ -11,7 +11,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
     
         public GameObject alignmentTarget;
         public GameObject holderTarget;
-        [SerializeField] private Align align;
+        [SerializeField] public  Align align;
 
 
         public void FaceTarget()

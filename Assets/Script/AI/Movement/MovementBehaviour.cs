@@ -9,7 +9,11 @@ namespace Assets.Scripts.AI.Movement
 {
 
 
-
+    /**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
     public class MovementBehaviour : MonoBehaviour
     {
         public GameObject _targetGameObject;

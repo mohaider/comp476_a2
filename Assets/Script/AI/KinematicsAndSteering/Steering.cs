@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
-using System.Collections;
+/**
+ * Code written by Mohammed Haider
+ * If you have any questions about this code, feel free to email me
+ * mrhaider@gmail.com 
+ */
 
 namespace Assets.AI.KinematicsAndSteering
 {

@@ -17,13 +17,13 @@ namespace Assets.Script.AI.KinematicsAndSteering
         public float slowRadius;
         public float timeToTarget = 0.1f;
         [SerializeField]
-        private Steering steering;
+        public  Steering steering;
 
 
         private void align()
         {
             float rotation = target.transform.rotation.eulerAngles.y - transform.rotation.eulerAngles.y;
-
+    
             rotation = AdditionalVector3Tools.mapAngleToRange(rotation);
             float rotationSize = Mathf.Abs(rotation);
             float targetRotation = 0;
@@ -57,7 +57,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
                 steering.Angular /= angularAcceleration;
                 steering.Angular *= maxAngularAcceleration;
             }
-            steering.Linear = Vector3.zero;
+          
 
         }
 
