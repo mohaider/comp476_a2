@@ -16,11 +16,17 @@ namespace Assets.Script.AI.PathFinding
     {
         #region class variables and properties
 
-       
+        public enum HeuristicType
+        {
+            EuclideanDistance = 0,
+            nullHeuristic,
+            clusterHeuristic
+        }
+        public HeuristicType heuristicType = HeuristicType.EuclideanDistance;
         private Grid grid; //the game's grid
         private PathRequestManager requestmanager;
-/*        public Transform seeker;
-        public Transform target;*/
+        /*        public Transform seeker;
+                public Transform target;*/
 
         #endregion
 
@@ -29,7 +35,7 @@ namespace Assets.Script.AI.PathFinding
         void Awake()
         {
             grid = GetComponent<Grid>();
-           requestmanager = GetComponent<PathRequestManager>();
+            requestmanager = GetComponent<PathRequestManager>();
         }
 
         #endregion
@@ -42,8 +48,8 @@ namespace Assets.Script.AI.PathFinding
         }
         void Update()
         {
-           // if (Input.GetButtonDown("Jump")) 
-              //  FindPath(seeker.position,target.position);
+            // if (Input.GetButtonDown("Jump")) 
+            //  FindPath(seeker.position,target.position);
         }
         /// <summary>
         /// this is an implementation of the A* path finding algorithm. 
@@ -74,19 +80,18 @@ namespace Assets.Script.AI.PathFinding
             Node startNode = grid.QuantizePosition(startPos); // get node relative to the startPos
             Node targetNode = grid.QuantizePosition(targetPos); //get target node relative to the start pos
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            Vector3[] wayPoints = new Vector3[0] ;
+      
+            Vector3[] wayPoints = new Vector3[0];
             bool pathSuccess = false;
 
             if (startNode.IsWalkable && targetNode.IsWalkable)
-            { 
-            //according to the A* algorithm, we need an open list and closed list
-          // List<Node> openList = new List<Node>();
-            Heap<Node> openHeap = new Heap<Node>(grid.MaxSize);
-            HashSet<Node> closedSet = new HashSet<Node>();//we need to be able to check if the list contains a specific node, so a hashset or dictionary set should suffice
-            openHeap.Add(startNode);
-           // openList.Add(startNode);
+            {
+                //according to the A* algorithm, we need an open list and closed list
+                // List<Node> openList = new List<Node>();
+                Heap<Node> openHeap = new Heap<Node>(grid.MaxSize);
+                HashSet<Node> closedSet = new HashSet<Node>();//we need to be able to check if the list contains a specific node, so a hashset or dictionary set should suffice
+                openHeap.Add(startNode);
+                // openList.Add(startNode);
 
 
                 while (openHeap.Count > 0)
@@ -108,8 +113,7 @@ namespace Assets.Script.AI.PathFinding
                     closedSet.Add(currentNode);
                     if (currentNode == targetNode) //path has been found
                     {
-                        sw.Stop();
-                        print("total time with unoptimaized path finding is " + sw.ElapsedMilliseconds + "ms");
+
 
                         pathSuccess = true;
                         break; //exit out of the loop
@@ -143,8 +147,8 @@ namespace Assets.Script.AI.PathFinding
                 wayPoints = RetracePath(startNode, targetNode);
             }
 
-            requestmanager.FinishProcessingPath(wayPoints,pathSuccess);
-            
+            requestmanager.FinishProcessingPath(wayPoints, pathSuccess);
+
         }
 
         //retrace our steps
@@ -171,7 +175,7 @@ namespace Assets.Script.AI.PathFinding
             Vector2 directionOld = Vector2.zero;
             for (int i = 1; i < path.Count; i++)
             {
-                Vector2 directionNew = new Vector2(path[i - 1].PositionX - path[i].PositionX, 
+                Vector2 directionNew = new Vector2(path[i - 1].PositionX - path[i].PositionX,
                     path[i - 1].PositionY - path[i].PositionY);
                 if (directionNew != directionOld)
                 {
@@ -186,15 +190,29 @@ namespace Assets.Script.AI.PathFinding
         //horizonal moves cost 10
         int GetDistance(Node A, Node B)
         {
-            int distX = Mathf.Abs(A.PositionX - B.PositionX);
-            int distY = Mathf.Abs(A.PositionY - B.PositionY);
-
-            if (distX > distY)
-                return 14 * distY + 10 * (distX - distY);
-            else
+            int returner=0;
+            switch (heuristicType)
             {
-                return 14 * distX + 10 * (distY - distX);
+                case HeuristicType.EuclideanDistance:
+                    int distX = Mathf.Abs(A.PositionX - B.PositionX);
+                    int distY = Mathf.Abs(A.PositionY - B.PositionY);
+
+                    if (distX > distY)
+                        returner=  14 * distY + 10 * (distX - distY);
+                    else
+                    {
+                        returner= 14 * distX + 10 * (distY - distX);
+                    }
+                    break;
+                case HeuristicType.nullHeuristic:
+                    
+                    break;
+                    case HeuristicType.clusterHeuristic:
+
+                    returner= 1;
+                    break;
             }
+            return returner;
         }
         #endregion
 

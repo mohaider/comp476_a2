@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
-
+using System.Xml;
 namespace Assets.Script.AI.PathFinding
 {/**
  * Code written by Mohammed Haider
@@ -10,12 +10,15 @@ namespace Assets.Script.AI.PathFinding
  */
     public class Grid : MonoBehaviour
     {
-        public bool displayGridGizmos ;
+
+        public List<Node> _gridAsList;
+        public bool displayGridGizmos;
         #region class variables and properties
         [SerializeField]
         private bool ShowAllGizmos = false;
-        Node[,] grid;
+        public Node[,] grid;
         private List<Node> _path;
+        private int totalNodes;
 
         [SerializeField]
         private Vector2 worldSize; //our area in the world
@@ -32,8 +35,11 @@ namespace Assets.Script.AI.PathFinding
         private LayerMask UnwalkableMask;
 
         [SerializeField]
-        private int GridSizeX, GridSizeY;
+        private int _gridSizeX, _gridSizeY;
+        [SerializeField]
+        private int _maxSize;
 
+        private GridToFile gridtoFile;
         public List<Node> Path
         {
             get { return _path; }
@@ -42,7 +48,7 @@ namespace Assets.Script.AI.PathFinding
 
         public int MaxSize
         {
-            get { return GridSizeX * GridSizeY; }
+            get { return _gridSizeX * _gridSizeY; }
 
         }
 
@@ -58,8 +64,17 @@ namespace Assets.Script.AI.PathFinding
             set { _nodeRadius = value; }
         }
 
-        [SerializeField]
-        private int _maxSize;
+        public int GridSizeX
+        {
+            get { return _gridSizeX; }
+            set { _gridSizeX = value; }
+        }
+
+        public int GridSizeY
+        {
+            get { return _gridSizeY; }
+            set { _gridSizeY = value; }
+        }
 
         #endregion
         #region UnityFunctions
@@ -67,9 +82,15 @@ namespace Assets.Script.AI.PathFinding
         void Awake()
         {
             _nodeDiameter = _nodeRadius * 2;
-            GridSizeX = Mathf.RoundToInt(worldSize.x / _nodeDiameter);
-            GridSizeY = Mathf.RoundToInt(worldSize.y / _nodeDiameter);
+            _gridSizeX = Mathf.RoundToInt(worldSize.x / _nodeDiameter);
+            _gridSizeY = Mathf.RoundToInt(worldSize.y / _nodeDiameter);
             CreateGrid();
+            //    gridtoFile = new GridToFile();
+            //    gridtoFile.nodes = grid;
+            // gridtoFile.Save(System.IO.Path.Combine(Application.persistentDataPath, "grid.xml"));
+            string path = "";
+
+
         }
 
 
@@ -81,28 +102,43 @@ namespace Assets.Script.AI.PathFinding
 
         void CreateGrid()
         {
-            grid = new Node[GridSizeX, GridSizeY];
+            grid = new Node[_gridSizeX, _gridSizeY];
             Vector3 worldBottomLeft = transform.position - Vector3.right * worldSize.x / 2 - Vector3.forward * worldSize.y / 2;
 
             //set the grid
-
-            for (int x = 0; x < GridSizeX; x++)
+            int id = 0;
+            for (int x = 0; x < _gridSizeX; x++)
             {
-                for (int y = 0; y < GridSizeY; y++)
+                for (int y = 0; y < _gridSizeY; y++)
                 {
                     Vector3 worldPosition = worldBottomLeft + Vector3.right * (x * _nodeDiameter + _nodeRadius) +
                                             Vector3.forward * (y * _nodeDiameter + _nodeRadius);
                     //check to see if current position is walkable
                     bool isWalkable = !Physics.CheckSphere(worldPosition, _nodeRadius, UnwalkableMask);
                     grid[x, y] = new Node(isWalkable, worldPosition, x, y);
+                    grid[x, y].Id = id++;
                 }
             }
-
+            totalNodes = id;
 
 
 
         }
+        /// <summary>
+        /// creates a list of nodes and returns from the 2d grid array of nodes
+        /// </summary>
+        /// <returns>List of nodes</returns>
+        public List<Node> MakeListFromGrid()
+        {
 
+            List<Node> nodes = new List<Node>(_gridSizeX * _gridSizeY);
+            for (int i = 0; i < _gridSizeX; i++)
+                for (int j = 0; j < _gridSizeY; j++)
+                {
+                    nodes.Add(grid[i, j]);
+                }
+            return nodes;
+        }
         public Node QuantizePosition(Vector3 worldPosition)
         {
             float percentX = (worldPosition.x - transform.position.x + worldSize.x / 2) / worldSize.x;
@@ -111,8 +147,8 @@ namespace Assets.Script.AI.PathFinding
             percentX = Mathf.Clamp01(percentX);
             percentY = Mathf.Clamp01(percentY);
 
-            int x = Mathf.RoundToInt((GridSizeX - 1) * percentX);
-            int y = Mathf.RoundToInt((GridSizeY - 1) * percentY);
+            int x = Mathf.RoundToInt((_gridSizeX - 1) * percentX);
+            int y = Mathf.RoundToInt((_gridSizeY - 1) * percentY);
 
             return grid[x, y];
         }
@@ -133,7 +169,7 @@ namespace Assets.Script.AI.PathFinding
                     int checkX = n.PositionX + x;
                     int checkY = n.PositionY + y;
 
-                    if (checkX >= 0 && checkX < GridSizeX && checkY >= 0 && checkY < GridSizeY)
+                    if (checkX >= 0 && checkX < _gridSizeX && checkY >= 0 && checkY < _gridSizeY)
                     {
                         neighbours.Add(grid[checkX, checkY]);
                     }
@@ -143,7 +179,61 @@ namespace Assets.Script.AI.PathFinding
             return neighbours;
 
         }
+        public List<Node> GetWalkableNeighbors(Node n)
+        {
+            //where is this node in the grid?
+            List<Node> neighbours = new List<Node>();
 
+            //this will search in a 3X3 block
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    if (x == 0 && y == 0)
+                        continue; //we're at the current node
+
+                    int checkX = n.PositionX + x;
+                    int checkY = n.PositionY + y;
+
+                    if (checkX >= 0 && checkX < _gridSizeX && checkY >= 0 && checkY < _gridSizeY)
+                    {
+                        if (grid[checkX, checkY].IsWalkable)
+                            neighbours.Add(grid[checkX, checkY]);
+
+                    }
+                }
+
+            }
+            return neighbours;
+
+        }
+
+        public int[,] CreateAdjacencyMatrix()
+        {
+            int[,] adjacencyMatrix = new int[totalNodes, totalNodes];
+            for (int i=0; i < totalNodes ; i++)
+            {
+                for (int j = 0; j < totalNodes; j++)
+                {
+                    adjacencyMatrix[i, j] = 0;
+                }
+            }
+            for (int x = 0; x < _gridSizeX; x++)
+            {
+                for (int y = 0; y < _gridSizeY; y++)
+                {
+                    if (!grid[x, y].IsWalkable)
+                        continue;
+                    Node n = grid[x, y];
+                    List<Node> neighbors = GetWalkableNeighbors(n);
+                    for (int k = 0; k < neighbors.Count; k++)
+                    {
+                        adjacencyMatrix[n.Id, neighbors[k].Id] = 1;
+                    }
+                }
+            }
+            return adjacencyMatrix;
+        }
 
         #endregion
 
@@ -154,13 +244,15 @@ namespace Assets.Script.AI.PathFinding
         {
             Gizmos.DrawWireCube(transform.position, new Vector3(worldSize.x, 1f, worldSize.y));
 
-            if (grid != null && displayGridGizmos==true)
+            if (grid != null && displayGridGizmos == true)
             {
 
                 foreach (Node n in grid)
                 {
                     Gizmos.color = (n.IsWalkable ? Color.white : Color.red);
-
+                    int id = n.Id;
+                    if (id == 0||id ==1||id==2||id==10)
+                        Gizmos.color = Color.blue;
                     Gizmos.DrawCube(n.WorldPosition, Vector3.one * (_nodeDiameter - .1f));
 
                 }

@@ -1,21 +1,30 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
-
+using System.Xml;
+using System.Xml.Serialization;
 namespace Assets.Script.AI.PathFinding
 {
+    [Serializable]
     public class Node : IHeapItem<Node>
     {
+        public Node()
+        {
+        }
+
         #region class variables and properties
 
+        private int _id;
         private bool _isWalkable;
         private Node _parentNode;
-        private Vector3 _worldPosition;
-        [SerializeField] private int _gCost;
-        [SerializeField] private int _hCost;
-
-        [SerializeField] private int _positionX;
-        [SerializeField] private int _positionY;
-
+     
+        public Vector3 _worldPosition;
+        private int _gCost;
+         private int _hCost;
+        private int _positionX;
+    
+        private int _positionY;
+        private int _heapIndex;
         public bool IsWalkable
         {
             get { return _isWalkable; }
@@ -62,6 +71,18 @@ namespace Assets.Script.AI.PathFinding
             get { return _parentNode; }
             set { _parentNode = value; }
         }
+       
+        public int HeapIndex
+        {
+            get { return _heapIndex; }
+            set { _heapIndex = value; }
+        }
+
+        public int Id
+        {
+            get { return _id; }
+            set { _id = value; }
+        }
 
         #endregion
 
@@ -81,12 +102,6 @@ namespace Assets.Script.AI.PathFinding
 
         #region class functions
 
-        private int _heapIndex;
-        public int HeapIndex
-        {
-            get { return _heapIndex; }
-            set { _heapIndex = value; }
-        }
 
         public int CompareTo(Node nodeA)
         {
@@ -102,7 +117,7 @@ namespace Assets.Script.AI.PathFinding
 
         #endregion
 
-
+        #region class functions
 
         public int CompareTo(object obj)
         {
@@ -115,5 +130,11 @@ namespace Assets.Script.AI.PathFinding
             }
             return -comparer;
         }
+
+   
+        #endregion
+
+      
+
     }
 }

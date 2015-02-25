@@ -53,7 +53,7 @@ public class Unit : MonoBehaviour
             if (direction.magnitude <arriveRadius)
             {
                 targetIndex++;
-                print(targetIndex);
+ 
                 if (targetIndex >= path.Length)
                 {
                     yield break;
@@ -61,7 +61,7 @@ public class Unit : MonoBehaviour
                 currentWayPoint = path[targetIndex];
                 holder.transform.position = currentWayPoint;
             }
-            print(currentWayPoint);
+          
             arrive.target = holder;
            // transform.position = Vector3.MoveTowards(transform.position, currentWayPoint, speed*Time.deltaTime);
             
