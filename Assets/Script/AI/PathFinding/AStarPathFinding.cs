@@ -1,9 +1,9 @@
 ﻿using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System;
+using System.Diagnostics;
+using System.Runtime.Remoting.Channels;
 
 namespace Assets.Script.AI.PathFinding
 {
@@ -22,8 +22,16 @@ namespace Assets.Script.AI.PathFinding
             nullHeuristic,
             clusterHeuristic
         }
+
+        public enum PathFindingGraphType
+        {
+            GridSearch = 0,
+            PoVSearch
+        }
         public HeuristicType heuristicType = HeuristicType.EuclideanDistance;
+        public PathFindingGraphType pathType  = PathFindingGraphType.GridSearch;
         private Grid grid; //the game's grid
+        private PoVNodeGraph nodeGraph;
         private PathRequestManager requestmanager;
         /*        public Transform seeker;
                 public Transform target;*/
@@ -35,6 +43,7 @@ namespace Assets.Script.AI.PathFinding
         void Awake()
         {
             grid = GetComponent<Grid>();
+            nodeGraph = GetComponent<PoVNodeGraph>();
             requestmanager = GetComponent<PathRequestManager>();
         }
 
@@ -44,12 +53,113 @@ namespace Assets.Script.AI.PathFinding
 
         public void StartFindPath(Vector3 startPos, Vector3 endPos)
         {
-            StartCoroutine(FindPath(startPos, endPos));
+            switch (pathType)
+            {
+                    case PathFindingGraphType.GridSearch:
+                        StartCoroutine 
+                    (FindPath(startPos, endPos));
+                    break;
+                case PathFindingGraphType.PoVSearch:
+                    StartCoroutine(FindPoVPath(startPos, endPos));
+                    break;
+            }
         }
-        void Update()
+
+
+
+        private IEnumerator FindPoVPath(Vector3 startPos, Vector3 targetPos)
         {
-            // if (Input.GetButtonDown("Jump")) 
-            //  FindPath(seeker.position,target.position);
+            // OPEN //the set of nodes that need to be evaluated in the openlist
+            // CLOSED // the set of nodes already evaluated
+            // loop
+            //     current = node in OPEN with the lowest fCost
+            //    remove current from open 
+            //     add current to CLOSED
+            //     
+            //     if current is the target node //path has been found
+            //        return
+            //    foreach neighbour of the current node
+            //    if neighbour is not traversable or is in CLOSED
+            //         skip to the next neighbour
+            // 
+            //     if new path to neighbor is shorter OR neighbour is not in OPEN
+            //         SET FCost of neighbour
+            //         SET parent of neighbour to current
+            //         if neighbour is not in open
+            //             add neighbor to open 
+            //
+            Node startNode = nodeGraph.QuantizePosition(startPos); // get node relative to the startPos
+            
+            Node targetNode = nodeGraph.QuantizePosition(targetPos); //get target node relative to the start pos
+    
+      
+            Vector3[] wayPoints = new Vector3[0];
+            bool pathSuccess = false;
+
+           // if (startNode.IsWalkable && targetNode.IsWalkable)
+            
+                //according to the A* algorithm, we need an open list and closed list
+                // List<Node> openList = new List<Node>();
+                Heap<Node> openHeap = new Heap<Node>(grid.MaxSize);
+                HashSet<Node> closedSet = new HashSet<Node>();//we need to be able to check if the list contains a specific node, so a hashset or dictionary set should suffice
+                openHeap.Add(startNode);
+                // openList.Add(startNode);
+
+
+                while (openHeap.Count > 0)
+                {
+                    //Node currentNode = openList[0];
+
+                    /*  for (int i = 1; i < openList.Count; i++) 
+                {
+
+                    if (openList[i].FCost < currentNode.FCost || openList[i].FCost == currentNode.FCost && openList[i].HCost < currentNode.HCost)
+                    {
+                        currentNode = openList[i];
+                    }
+                    openList.Remove(currentNode);
+                    closedSet.Add(currentNode);
+                }*/
+
+                    Node currentNode = openHeap.RemoveFirstItem();
+                    closedSet.Add(currentNode);
+                    if (currentNode == targetNode) //path has been found
+                    {
+
+
+                        pathSuccess = true;
+                        break; //exit out of the loop
+                    }
+
+                    //     foreach neighbour of the current node
+                    //     if neighbour is not traversable or is in CLOSED
+                    //        skip to the next neighbour
+                    foreach (Node neighbour in nodeGraph.GetNeighbours(currentNode))
+                    {
+                        if ( closedSet.Contains(neighbour))
+                            continue;
+                        int newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour,heuristicType);
+                        if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
+                        {
+                            neighbour.GCost = newMovementCostToNeighbour;
+                            neighbour.HCost = GetDistance(neighbour, targetNode, heuristicType);
+                            neighbour.ParentNode = currentNode;
+                            if (!openHeap.Contains(neighbour))
+                                openHeap.Add(neighbour);
+                            else openHeap.UpdateItem(neighbour);
+                        }
+                    }
+                }
+
+
+            
+            yield return null;
+            if (pathSuccess)
+            {
+                wayPoints = RetracePath(startNode, targetNode);
+            }
+
+            requestmanager.FinishProcessingPath(wayPoints, pathSuccess);
         }
         /// <summary>
         /// this is an implementation of the A* path finding algorithm. 
@@ -126,11 +236,11 @@ namespace Assets.Script.AI.PathFinding
                     {
                         if (!neighbour.IsWalkable || closedSet.Contains(neighbour))
                             continue;
-                        int newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour);
+                        int newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour, heuristicType);
                         if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
                         {
                             neighbour.GCost = newMovementCostToNeighbour;
-                            neighbour.HCost = GetDistance(neighbour, targetNode);
+                            neighbour.HCost = GetDistance(neighbour, targetNode, heuristicType);
                             neighbour.ParentNode = currentNode;
                             if (!openHeap.Contains(neighbour))
                                 openHeap.Add(neighbour);
@@ -151,7 +261,6 @@ namespace Assets.Script.AI.PathFinding
 
         }
 
-        //retrace our steps
 
         Vector3[] RetracePath(Node startNode, Node endNode)
         {
@@ -163,32 +272,43 @@ namespace Assets.Script.AI.PathFinding
                 path.Add(currenNode);
                 currenNode = currenNode.ParentNode;
             }
+            
             Vector3[] wayPoints = SimplifyPath(path);
             Array.Reverse(wayPoints);
             //grid.Path = path;
             return wayPoints;
         }
 
-        Vector3[] SimplifyPath(List<Node> path)
+        private Vector3[] SimplifyPath(List<Node> path)
         {
             List<Vector3> wayPoints = new List<Vector3>();
             Vector2 directionOld = Vector2.zero;
-            for (int i = 1; i < path.Count; i++)
-            {
+            switch (pathType){
+                case AStarPathFinding.PathFindingGraphType.GridSearch:
+            for (int i = 1; i < path.Count; i++){
                 Vector2 directionNew = new Vector2(path[i - 1].PositionX - path[i].PositionX,
                     path[i - 1].PositionY - path[i].PositionY);
-                if (directionNew != directionOld)
-                {
+                if (directionNew != directionOld){
                     wayPoints.Add(path[i].WorldPosition);
                 }
                 directionOld = directionNew;
             }
-            return wayPoints.ToArray();
+                    break;
+                case AStarPathFinding.PathFindingGraphType.PoVSearch:
+                    for (int i = 0; i < path.Count; i++)
+                    {
+                        wayPoints.Add(path[i].WorldPosition);
+                    }
+                    break;
+
+            }
+
+    return wayPoints.ToArray();
         }
 
         //diagonal moves cost 14
         //horizonal moves cost 10
-        int GetDistance(Node A, Node B)
+       public static int GetDistance(Node A, Node B, HeuristicType heuristicType)
         {
             int returner=0;
             switch (heuristicType)
@@ -203,7 +323,14 @@ namespace Assets.Script.AI.PathFinding
                     {
                         returner= 14 * distX + 10 * (distY - distX);
                     }
+                    Vector2 posA = new Vector2(A.WorldPosition.x,A.WorldPosition.z);
+                    Vector2 posB = new Vector2(B.WorldPosition.x,B.WorldPosition.z);
+                    float distance = Vector2.Distance(posA, posB);
+                    returner =  (int) distance;
+
+
                     break;
+
                 case HeuristicType.nullHeuristic:
                     
                     break;

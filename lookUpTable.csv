@@ -1,0 +1,16 @@
+,cluster1,cluster1a,cluster1b,cluster2a,cluster2b,cluster2c,cluster2d,cluster2e,cluster2f,cluster2g,cluster2h,cluster3,cluster3a,cluster4,cluster4a
+cluster1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster1a,0,0,176,0,0,0,0,0,0,0,0,0,0,0,0
+cluster1b,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster2a,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0
+cluster2b,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster2c,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster2d,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0
+cluster2e,0,0,0,0,0,0,0,0,104,0,0,0,0,0,0
+cluster2f,0,0,0,0,0,0,0,0,0,68,0,0,0,0,0
+cluster2g,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0
+cluster2h,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+cluster3a,0,0,0,0,0,0,0,0,0,0,0,0,0,92,0
+cluster4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8
+cluster4a,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

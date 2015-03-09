@@ -39,6 +39,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
         private void Awake()
         {
             align = GetComponent<Align>();
+            align.target = holderTarget;
         }
 
         private void Update()

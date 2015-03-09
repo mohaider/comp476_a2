@@ -11,14 +11,17 @@ namespace Assets.Script.AI.PathFinding
     public class Grid : MonoBehaviour
     {
 
-        public List<Node> _gridAsList;
+      //  public List<Node> _gridAsList;
+        private List<Cluster> _clusterList; 
         public bool displayGridGizmos;
         #region class variables and properties
         [SerializeField]
         private bool ShowAllGizmos = false;
-        public Node[,] grid;
+        public Node[,] grid; //grid representation
+        
         private List<Node> _path;
-        private int totalNodes;
+        private int _totalNodes;
+        public Cluster[] clusters;
 
         [SerializeField]
         private Vector2 worldSize; //our area in the world
@@ -33,6 +36,8 @@ namespace Assets.Script.AI.PathFinding
 
         [SerializeField]
         private LayerMask UnwalkableMask;
+
+        [SerializeField] private LayerMask ExitNodeMask;
 
         [SerializeField]
         private int _gridSizeX, _gridSizeY;
@@ -76,6 +81,18 @@ namespace Assets.Script.AI.PathFinding
             set { _gridSizeY = value; }
         }
 
+        public List<Cluster> ClusterList
+        {
+            get { return _clusterList; }
+            set { _clusterList = value; }
+        }
+
+        public int TotalNodes
+        {
+            get { return _totalNodes; }
+            set { _totalNodes = value; }
+        }
+
         #endregion
         #region UnityFunctions
 
@@ -85,11 +102,12 @@ namespace Assets.Script.AI.PathFinding
             _gridSizeX = Mathf.RoundToInt(worldSize.x / _nodeDiameter);
             _gridSizeY = Mathf.RoundToInt(worldSize.y / _nodeDiameter);
             CreateGrid();
+            
             //    gridtoFile = new GridToFile();
             //    gridtoFile.nodes = grid;
             // gridtoFile.Save(System.IO.Path.Combine(Application.persistentDataPath, "grid.xml"));
             string path = "";
-
+            _clusterList = new List<Cluster>();
 
         }
 
@@ -115,15 +133,54 @@ namespace Assets.Script.AI.PathFinding
                                             Vector3.forward * (y * _nodeDiameter + _nodeRadius);
                     //check to see if current position is walkable
                     bool isWalkable = !Physics.CheckSphere(worldPosition, _nodeRadius, UnwalkableMask);
+                    bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
                     grid[x, y] = new Node(isWalkable, worldPosition, x, y);
+                    grid[x, y].isExitNode = exitNode;
+                    SetNodeToCluster(grid[x, y]);
                     grid[x, y].Id = id++;
                 }
             }
-            totalNodes = id;
-
-
-
+            _totalNodes = id;
         }
+
+       
+
+        public void SetNodeToCluster(Node n)
+        {
+
+            for (int k = 0; k < clusters.Length; k++)
+            {
+                if (n.WorldPosition.x > clusters[k].Xbounds.x && n.WorldPosition.x < clusters[k].Xbounds.y
+                    && n.WorldPosition.z > clusters[k].Zbounds.x && n.WorldPosition.z < clusters[k].Zbounds.y)
+                {
+                    if (n._inCluster == null){ //cluster group is not set 
+                        n._inCluster = clusters[k];
+                        if(n.AssociatedPovNode != null)
+                            clusters[k].PovNodeList.Add(n);
+                        else
+                            clusters[k].NodeList.Add(n);
+                    } else if (n._inCluster.isSubCluster) //node is a sub cluster
+                        continue;
+                    else if (!n._inCluster.isSubCluster)
+                    {                         // the node is in a cluster but not a subcluster. Subclusters takes precedence.
+                        if (n.AssociatedPovNode != null){
+                            n._inCluster.PovNodeList.Remove(n);
+                            n._inCluster = clusters[k];
+                            clusters[k].PovNodeList.Add(n);
+                        } else {
+                            n._inCluster.NodeList.Remove(n);
+                            n._inCluster = clusters[k];
+                            clusters[k].NodeList.Add(n);
+                        }
+                    } 
+
+                }
+            }
+        }
+
+      
+
+
         /// <summary>
         /// creates a list of nodes and returns from the 2d grid array of nodes
         /// </summary>
@@ -210,10 +267,10 @@ namespace Assets.Script.AI.PathFinding
 
         public int[,] CreateAdjacencyMatrix()
         {
-            int[,] adjacencyMatrix = new int[totalNodes, totalNodes];
-            for (int i=0; i < totalNodes ; i++)
+            int[,] adjacencyMatrix = new int[_totalNodes, _totalNodes];
+            for (int i=0; i < _totalNodes ; i++)
             {
-                for (int j = 0; j < totalNodes; j++)
+                for (int j = 0; j < _totalNodes; j++)
                 {
                     adjacencyMatrix[i, j] = 0;
                 }
@@ -231,6 +288,7 @@ namespace Assets.Script.AI.PathFinding
                         adjacencyMatrix[n.Id, neighbors[k].Id] = 1;
                     }
                 }
+     
             }
             return adjacencyMatrix;
         }
@@ -261,5 +319,7 @@ namespace Assets.Script.AI.PathFinding
 
         #endregion
 
+
+        
     }
 }

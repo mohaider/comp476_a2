@@ -61,7 +61,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
 
         }
 
-        void Awake()
+        void Start()
         {
             steering = GetComponent<Steering>();
         }

@@ -22,9 +22,12 @@ namespace Assets.Script.AI.PathFinding
         private int _gCost;
          private int _hCost;
         private int _positionX;
-    
+        public string _clusterGroup;
+        public Cluster _inCluster;
         private int _positionY;
         private int _heapIndex;
+        private PoVNodes _associatedPovNode;
+        public bool isExitNode;
         public bool IsWalkable
         {
             get { return _isWalkable; }
@@ -82,6 +85,12 @@ namespace Assets.Script.AI.PathFinding
         {
             get { return _id; }
             set { _id = value; }
+        }
+
+        public PoVNodes AssociatedPovNode
+        {
+            get { return _associatedPovNode; }
+            set { _associatedPovNode = value; }
         }
 
         #endregion

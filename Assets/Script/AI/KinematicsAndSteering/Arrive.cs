@@ -19,6 +19,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
         public void Arrival()
         {
             Vector3 direction = target.transform.position - transform.position;
+            direction.y = 0;
             float distance = direction.magnitude;
             float targetSpeed = 0;
             if (distance < targetRadius)
