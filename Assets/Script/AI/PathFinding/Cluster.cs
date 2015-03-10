@@ -26,7 +26,8 @@ namespace Assets.Script.AI.PathFinding
         public bool isSubCluster;
         private List<PoVNodes> povNodes;
         public List<Node> _nodeList;
-        public List<Node> _povNodeList; 
+        public List<Node> _povNodeList;
+        public List<Node> exitNodes;
 
         public List<Node> NodeList
         {
@@ -67,5 +68,14 @@ namespace Assets.Script.AI.PathFinding
         }
 
         #endregion
+
+        internal void SetUpExitNodesList()
+        {
+            foreach (Node n in _povNodeList)
+            {
+                if (n.isExitNode && !exitNodes.Contains(n))
+                    exitNodes.Add(n);
+            }
+        }
     }
 }

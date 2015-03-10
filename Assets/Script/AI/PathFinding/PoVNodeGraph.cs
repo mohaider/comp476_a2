@@ -30,6 +30,7 @@ namespace Assets.Script.AI.PathFinding
                 PoVNodesList = new List<Node>();
             PoVNodesList.Add(n);
             grid.SetNodeToCluster(n);
+            grid.SetUpExitNodeList();
         }
 
         public List<Node> GetNeighbours(Node n)
@@ -50,7 +51,10 @@ namespace Assets.Script.AI.PathFinding
 
                     if (hit.collider.tag == "NavNodes" || hit.collider.tag == "NavNodeExit")
                     {
-                        
+                        GameObject obj = hit.collider.gameObject;
+                        PoVNodes nud = obj.GetComponent<PoVNodes>();
+                        if(nud == null )
+                            print(obj.name + "has no pov node attached");
                         neighbors.Add(hit.collider.gameObject.GetComponent<PoVNodes>().AssociatedNode);
                     }
                 }

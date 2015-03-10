@@ -31,7 +31,7 @@ namespace Assets.Script.AI.PathFinding
         public HeuristicType heuristicType = HeuristicType.EuclideanDistance;
         public PathFindingGraphType pathType  = PathFindingGraphType.GridSearch;
         private Grid grid; //the game's grid
-        private PoVNodeGraph nodeGraph;
+        public PoVNodeGraph nodeGraph;
         private PathRequestManager requestmanager;
         /*        public Transform seeker;
                 public Transform target;*/
@@ -314,18 +314,11 @@ namespace Assets.Script.AI.PathFinding
             switch (heuristicType)
             {
                 case HeuristicType.EuclideanDistance:
-                    int distX = Mathf.Abs(A.PositionX - B.PositionX);
-                    int distY = Mathf.Abs(A.PositionY - B.PositionY);
-
-                    if (distX > distY)
-                        returner=  14 * distY + 10 * (distX - distY);
-                    else
-                    {
-                        returner= 14 * distX + 10 * (distY - distX);
-                    }
+                   
                     Vector2 posA = new Vector2(A.WorldPosition.x,A.WorldPosition.z);
                     Vector2 posB = new Vector2(B.WorldPosition.x,B.WorldPosition.z);
-                    float distance = Vector2.Distance(posA, posB);
+                    //float distance = Vector2.Distance(posA, posB);
+                    float distance = Vector2.SqrMagnitude(posB - posA);
                     returner =  (int) distance;
 
 

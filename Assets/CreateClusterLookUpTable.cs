@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Assets.Script.AI.PathFinding;
 
 public class CreateClusterLookUpTable : MonoBehaviour
@@ -12,16 +13,19 @@ public class CreateClusterLookUpTable : MonoBehaviour
 
     public Cluster[] clusters;
     public Grid grid;
+    public PoVNodeGraph NodeGraph;
     private float[,] lookupTable;
 	// Use this for initialization
 	void Start ()
 	{
 	     grid = GetComponent<Grid>();
+	    NodeGraph = GetComponent<PoVNodeGraph>();
 	    clusters=grid.clusters;
-	
-	        ConstructLookupTables();
-        if(startCreation)
+
+        ConstructLookupTables();
+    
     	    WriteLookupTable();
+        print("finished");
 
 	}
 
@@ -64,65 +68,102 @@ public class CreateClusterLookUpTable : MonoBehaviour
         }
 	}
 
+    internal void FindMinDistanceBetweenTwoClusters(List<Node> A, List<Node> B)
+    {
+        
+    }
     internal void ConstructLookupTables()
     {
+        int outs = 0;
          lookupTable = new float[clusters.Length,clusters.Length];
-
-       /* for (int i = 0; i < clusters.Length-1; i++)//clusters.Count()-1
+        int size = clusters.Length;
+        for (int i=0; i < size; ++i)
         {
-            float minDistance = Mathf.Infinity;
-            float distanceToCompare = 0;
-            try
+            for (int j = i+1; j < size; ++j)
             {
-               
-                for (int j = 0; j < clusters[i]._nodeList.Count; j ++){
-                    Node currentNode = clusters[i].NodeList[j];
-                    if (!currentNode.isExitNode || !currentNode.IsWalkable){
-                        continue;
-                    }
-                    for (int k = 0; k < clusters[i + 1]._nodeList.Count; k++){
-                        Node ComparisonNode = clusters[i + 1]._nodeList[k];
-                        if (!ComparisonNode.IsWalkable){
-                            continue;
-                        }
-                        //find distance
-                        Vector2 A = new Vector2(currentNode.WorldPosition.x,currentNode.WorldPosition.z);
-                        Vector2 B = new Vector2(ComparisonNode.WorldPosition.x,currentNode.WorldPosition.z);
-                        distanceToCompare = Vector2.Distance(A, B);
-                        if (distanceToCompare < minDistance){
-                            minDistance = distanceToCompare;
-                            lookupTable[i, i + 1] = minDistance;
-                        } 
-                    }
+                foreach (Node n in clusters[i].exitNodes)
+                {
+                    float minDist = Mathf.Infinity;
+                    foreach (Node m in clusters[j].exitNodes)
+                    {
+                        float tempDist ;
+                        Djikstras(n,m, out tempDist);
+                        if (tempDist < minDist)
+                        {
+                            minDist = tempDist;
+                            lookupTable[i, j] = minDist;
+                            lookupTable[j, i] = lookupTable[i, j];
 
+                        }
+                    }
                 }
+
             }
-            catch (Exception e)
-            {
-                Debug.Log(e);
-            }
+        }
+
+
+    }
+
+    internal void ConstructLookupTables2()
+    {
+        lookupTable = new float[clusters.Length, clusters.Length];
+
+        /* for (int i = 0; i < clusters.Length-1; i++)//clusters.Count()-1
+         {
+             float minDistance = Mathf.Infinity;
+             float distanceToCompare = 0;
+             try
+             {
+               
+                 for (int j = 0; j < clusters[i]._nodeList.Count; j ++){
+                     Node currentNode = clusters[i].NodeList[j];
+                     if (!currentNode.isExitNode || !currentNode.IsWalkable){
+                         continue;
+                     }
+                     for (int k = 0; k < clusters[i + 1]._nodeList.Count; k++){
+                         Node ComparisonNode = clusters[i + 1]._nodeList[k];
+                         if (!ComparisonNode.IsWalkable){
+                             continue;
+                         }
+                         //find distance
+                         Vector2 A = new Vector2(currentNode.WorldPosition.x,currentNode.WorldPosition.z);
+                         Vector2 B = new Vector2(ComparisonNode.WorldPosition.x,currentNode.WorldPosition.z);
+                         distanceToCompare = Vector2.Distance(A, B);
+                         if (distanceToCompare < minDistance){
+                             minDistance = distanceToCompare;
+                             lookupTable[i, i + 1] = minDistance;
+                         } 
+                     }
+
+                 }
+             }
+             catch (Exception e)
+             {
+                 Debug.Log(e);
+             }
 
            
-        }*/
+         }*/
         for (int i = 0; i < clusters.Length - 1; i++) //clusters.Count()-1
         {
-          
-            for (int j = 0; j < clusters[i].NodeList.Count; j++)
+
+            for (int j = 0; j < clusters[i].PovNodeList.Count; j++)
             {
-                Node currentNode = clusters[i].NodeList[j];
+                Node currentNode = clusters[i].PovNodeList[j];
                 Node ComparisonNode;
-                 if (!currentNode.isExitNode || !currentNode.IsWalkable){
-                        continue;
-                    }
-                for (int k = i+1; k < clusters.Length; k++)
+                if (!currentNode.isExitNode || !currentNode.IsWalkable)
+                {
+                    continue;
+                }
+                for (int k = i + 1; k < clusters.Length; k++)
                 {
                     float minDistance = Mathf.Infinity;
                     float distanceToCompare = 0;
-                    for (int l = 0; l < clusters[k].NodeList.Count; i++)
+                    for (int l = 0; l < clusters[k].PovNodeList.Count; i++)
                     {
-                 
-                        ComparisonNode = clusters[k]._nodeList[l];
-                        if (!ComparisonNode.IsWalkable || !ComparisonNode.isExitNode)
+
+                        ComparisonNode = clusters[k].PovNodeList[l];
+                        if (!ComparisonNode.IsWalkable || !ComparisonNode.isExitNode || k == i)
                             continue;
                         Vector2 A = new Vector2(currentNode.WorldPosition.x, currentNode.WorldPosition.z);
                         Vector2 B = new Vector2(ComparisonNode.WorldPosition.x, currentNode.WorldPosition.z);
@@ -130,14 +171,14 @@ public class CreateClusterLookUpTable : MonoBehaviour
                         if (distanceToCompare < minDistance)
                         {
                             minDistance = distanceToCompare;
-                            lookupTable[i,k] = minDistance;
-                        } 
+                            lookupTable[i, k] = minDistance;
+                            lookupTable[k, i] = minDistance;
+                        }
                     }
                 }
             }
         }
     }
-
     internal void Djikstras(Node startNode, Node targetNode, out float distance)
     {
         
@@ -180,19 +221,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
 
             while (openHeap.Count > 0)
             {
-                //Node currentNode = openList[0];
-
-                /*  for (int i = 1; i < openList.Count; i++) 
-            {
-
-                if (openList[i].FCost < currentNode.FCost || openList[i].FCost == currentNode.FCost && openList[i].HCost < currentNode.HCost)
-                {
-                    currentNode = openList[i];
-                }
-                openList.Remove(currentNode);
-                closedSet.Add(currentNode);
-            }*/
-
+               
                 Node currentNode = openHeap.RemoveFirstItem();
                 closedSet.Add(currentNode);
                 if (currentNode == targetNode) //path has been found
@@ -206,7 +235,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
                 //     foreach neighbour of the current node
                 //     if neighbour is not traversable or is in CLOSED
                 //        skip to the next neighbour
-                foreach (Node neighbour in grid.GetNeighbours(currentNode))
+                foreach (Node neighbour in NodeGraph.GetNeighbours(currentNode))
                 {
                     if (!neighbour.IsWalkable || closedSet.Contains(neighbour))
                         continue;
@@ -214,7 +243,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
                     if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
                     {
                         neighbour.GCost = newMovementCostToNeighbour;
-                       // neighbour.HCost = AStarPathFinding.GetDistance(neighbour, targetNode,AStarPathFinding.HeuristicType.EuclideanDistance);
+                        neighbour.HCost = AStarPathFinding.GetDistance(neighbour, targetNode,AStarPathFinding.HeuristicType.EuclideanDistance);
                         neighbour.ParentNode = currentNode;
                         if (!openHeap.Contains(neighbour))
                             openHeap.Add(neighbour);
@@ -222,6 +251,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
                     }
                 }
             }
+            openHeap = null;
 
 
         }

@@ -133,9 +133,10 @@ namespace Assets.Script.AI.PathFinding
                                             Vector3.forward * (y * _nodeDiameter + _nodeRadius);
                     //check to see if current position is walkable
                     bool isWalkable = !Physics.CheckSphere(worldPosition, _nodeRadius, UnwalkableMask);
-                    bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
+                  //  bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
+                  //  Debug.
                     grid[x, y] = new Node(isWalkable, worldPosition, x, y);
-                    grid[x, y].isExitNode = exitNode;
+                    //grid[x, y].isExitNode = exitNode;
                     SetNodeToCluster(grid[x, y]);
                     grid[x, y].Id = id++;
                 }
@@ -320,6 +321,14 @@ namespace Assets.Script.AI.PathFinding
         #endregion
 
 
-        
+
+
+        internal void SetUpExitNodeList()
+        {
+            foreach (Cluster c in clusters)
+            {
+                c.SetUpExitNodesList();
+            }
+        }
     }
 }
