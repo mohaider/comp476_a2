@@ -1,111 +1,56 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Assets.Script.AI.KinematicsAndSteering;
 using UnityEngine;
+
 namespace Assets.Script.Character
 {
-    /**
- * Code written by Mohammed Haider
- * If you have any questions about this code, feel free to email me
- * mrhaider@gmail.com 
- */
-    class CharacterStateListener:MonoBehaviour
+    class CharacterStateListener: MonoBehaviour
     {
-        /*#region class variables and properties
-
-        public bool showCharacterGizmos = false;
-        
-        public GameObject target;
+        #region class properties and variables
         [SerializeField]
-        private CharacterStateController.characterState currentState = CharacterStateController.characterState.idle;
-        //current state
-        public CharacterStateController.characterState CurrentState
-        {
-            get { return currentState; }
-            set { currentState = value; }
-
-        }
+        private CharacterStateController _controller;
         #endregion
+        #region unity function
 
-
-        #region class functions
-        public void ChangeTarget(GameObject newTarget)
+        void Awake()
         {
-            target = newTarget;
+            _controller = GetComponent<CharacterStateController>();
         }
-        void OnStateCycle()
-        {
-            Vector3 directionVector3;
-            float dist = 0f;
-            if (target != null)
-            {
-                directionVector3 = target.transform.position - transform.position;
-                dist = directionVector3.magnitude;
-            }
 
-            switch (currentState)
+        void Update()
+        {
+            switch (_controller.CurrentState)
             {
-                case CharacterStateController.characterState.seek:
-                    Chase();
+                case CharacterStateController.CharacterState.stop:
+                    _controller.Arrive1.enabled = false;
+                    rigidbody.velocity = Vector3.zero;
                     break;
 
-                case CharacterStateController.characterState.stop:
-                    Stop();
+                case CharacterStateController.CharacterState.rotateAndMove:
+                    _controller.Arrive1.enabled = true;
+                     _controller.WhereYoureGoing.enabled = true;
+                    _controller.Face1.enabled = false;
                     break;
+
+                    case CharacterStateController.CharacterState.stopAndRotate:
+                    _controller.Arrive1.enabled = false;
+                    _controller.WhereYoureGoing.enabled = false;
+                    _controller.Face1.enabled = true;
+                    rigidbody.velocity = Vector3.zero;
+                    break;
+
+                    case CharacterStateController.CharacterState.move:
+                    _controller.Arrive1.enabled = true;
+                
+                    break;
+
+
             }
         }
 
-        private void Stop()
-        {
-        }
-
-        void Chase()
-        {
-            Vector3 direction = target.transform.position - transform.position;
-            direction.y = 0; //flatten y
-            float distance = direction.magnitude;
-            Vector3 characterForward = transform.forward;
-            characterForward.y = 0;
-
-            float angleBetweenDirectionAndTarget = Vector3.Angle(direction, characterForward);
-            float currentSpeed = rigidbody.velocity.magnitude;
-
-            if (currentSpeed <= 1f)
-            {
-                if (distance < (GetComponent<Arrive>().targetRadius + GetComponent<Arrive>().targetRadius*.10f))
-                {
-                    float theta = transform.rotation.eulerAngles.y *Mathf.Deg2Rad;
-                    float x = Mathf.Cos(theta)*GetComponent<Arrive>().targetRadius*.10f + transform.position.x;
-                    float z = Mathf.Sin(theta) * GetComponent<Arrive>().targetRadius * .10f+ transform.position.z;
-                    Vector3 newPos = new Vector3(x, 0, z);
-                    Debug.Log("might have to switch these two around");
-                    transform.position = newPos;
-                }
-                else
-                {
-                    float difInAngles = Vector3.Angle(characterForward, direction.normalized);
-                    float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
-                    targetAngle %= 360f;
-                    float currentAngle = transform.rotation.eulerAngles.y % 360;
-                    float differenceInAngles = targetAngle - currentAngle;
-                    if (difInAngles > 20f)
-                    {
-                       
-                        _characterBehaviourWrapper.Rotate(CharacterBehaviourWrapper.HeuristicType.A2);
-                    }
-                    else
-                    {
-                        _characterBehaviourWrapper.Move(CharacterBehaviourWrapper.HeuristicType.A2);
-                    }
-                }
-            }
-
-        }
         #endregion
-
-        #region 
-
-        #endregion
-*/
-    
     }
 }

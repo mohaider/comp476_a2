@@ -16,6 +16,8 @@ namespace Assets.Script.AI.PathFinding
         public float _clusterSizeX;
         [Range(0, 250)]
         public float _clusterSizeY;
+        [SerializeField]
+        public ClusterNode node;
 
         public Vector2 Xbounds;
         public Vector2 Zbounds;
@@ -39,6 +41,12 @@ namespace Assets.Script.AI.PathFinding
         {
             get { return _povNodeList; }
             set { _povNodeList = value; }
+        }
+
+        public ClusterNode Node
+        {
+            get { return node; }
+            set { node = value; }
         }
 
         #endregion

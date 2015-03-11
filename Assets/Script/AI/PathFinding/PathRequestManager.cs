@@ -16,7 +16,7 @@ public class PathRequestManager : MonoBehaviour
     private static PathRequestManager instance;
     private AStarPathFinding pathFinding;
     private bool isProcessing;
-
+    public UnityEngine.UI.Text text;
     /// <summary>
     /// takes in a vector3 for start, end and an action
     /// will be called from a unit class. The response won't be given immediately, the requests will be 
@@ -35,11 +35,17 @@ public class PathRequestManager : MonoBehaviour
 
     }
 
+    void Update()
+    {
+     
+    }
+
     /// <summary>
     /// if we are not processing a path, process the next one
     /// </summary>
     void TryNextProcess()
     {
+       
         if (!isProcessing && pathrequestQueue.Count > 0)
         {
             currentPathRequest = pathrequestQueue.Dequeue(); //dequeue pathrequest
@@ -52,6 +58,14 @@ public class PathRequestManager : MonoBehaviour
     public void FinishProcessingPath(Vector3[] path, bool success)
     {
         currentPathRequest.callback(path, success);
+        text.text = "Path finished processing";
+        string output = "\n coordinates of pathes are";
+        for (int i = 0; i < path.Length; i++)
+        {
+            output += " " + path[i] + "\n ";
+        }
+        text.text += output;
+        //text.text = "Path process request queue is " + pathrequestQueue.Count + "\n is processing path is " + isProcessing;
         isProcessing = false;
         TryNextProcess();
     }

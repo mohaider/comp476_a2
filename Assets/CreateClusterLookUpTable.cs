@@ -15,6 +15,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
     public Grid grid;
     public PoVNodeGraph NodeGraph;
     private float[,] lookupTable;
+    public AStarPathFinding astar;
 	// Use this for initialization
 	void Start ()
 	{
@@ -26,6 +27,9 @@ public class CreateClusterLookUpTable : MonoBehaviour
     
     	    WriteLookupTable();
         print("finished");
+	    astar = GetComponent<AStarPathFinding>();
+	    astar.LookUpTable = lookupTable;
+        Destroy(this);
 
 	}
 
@@ -239,11 +243,11 @@ public class CreateClusterLookUpTable : MonoBehaviour
                 {
                     if (!neighbour.IsWalkable || closedSet.Contains(neighbour))
                         continue;
-                    int newMovementCostToNeighbour = AStarPathFinding.GetDistance(currentNode, neighbour, AStarPathFinding.HeuristicType.EuclideanDistance);
+                    int newMovementCostToNeighbour = AStarPathFinding.ComputeEuclideanDistance(currentNode, neighbour);
                     if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
                     {
                         neighbour.GCost = newMovementCostToNeighbour;
-                        neighbour.HCost = AStarPathFinding.GetDistance(neighbour, targetNode,AStarPathFinding.HeuristicType.EuclideanDistance);
+                        neighbour.HCost = AStarPathFinding.ComputeEuclideanDistance(currentNode, neighbour);
                         neighbour.ParentNode = currentNode;
                         if (!openHeap.Contains(neighbour))
                             openHeap.Add(neighbour);
@@ -270,8 +274,7 @@ public class CreateClusterLookUpTable : MonoBehaviour
         float totalDistance = 0;
         while (currenNode != startNode)
         {
-            totalDistance += AStarPathFinding.GetDistance(currenNode, currenNode.ParentNode,
-                AStarPathFinding.HeuristicType.EuclideanDistance);
+            totalDistance += AStarPathFinding.ComputeEuclideanDistance(currenNode, currenNode.ParentNode);
             currenNode = currenNode.ParentNode;
         }
 

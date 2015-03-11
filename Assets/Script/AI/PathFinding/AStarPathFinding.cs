@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System;
 using System.Diagnostics;
 using System.Runtime.Remoting.Channels;
+using System.Xml;
 
 namespace Assets.Script.AI.PathFinding
 {
@@ -16,6 +17,9 @@ namespace Assets.Script.AI.PathFinding
     {
         #region class variables and properties
 
+     //   public UnityEngine.UI.Text text;
+        private float[,] lookUpTable;
+        private LoadLookUpTable LookupTableLoader;
         public enum HeuristicType
         {
             EuclideanDistance = 0,
@@ -29,10 +33,23 @@ namespace Assets.Script.AI.PathFinding
             PoVSearch
         }
         public HeuristicType heuristicType = HeuristicType.EuclideanDistance;
-        public PathFindingGraphType pathType  = PathFindingGraphType.GridSearch;
+        public PathFindingGraphType pathType = PathFindingGraphType.GridSearch;
         private Grid grid; //the game's grid
         public PoVNodeGraph nodeGraph;
         private PathRequestManager requestmanager;
+
+        public float[,] LookUpTable
+        {
+            get { return lookUpTable; }
+            set { lookUpTable = value; }
+        }
+
+        public Grid Grid
+        {
+            get { return grid; }
+            set { grid = value; }
+        }
+
         /*        public Transform seeker;
                 public Transform target;*/
 
@@ -45,6 +62,8 @@ namespace Assets.Script.AI.PathFinding
             grid = GetComponent<Grid>();
             nodeGraph = GetComponent<PoVNodeGraph>();
             requestmanager = GetComponent<PathRequestManager>();
+            LookupTableLoader = GetComponent<LoadLookUpTable>();
+            LookupTableLoader.Load();
         }
 
         #endregion
@@ -55,9 +74,9 @@ namespace Assets.Script.AI.PathFinding
         {
             switch (pathType)
             {
-                    case PathFindingGraphType.GridSearch:
-                        StartCoroutine 
-                    (FindPath(startPos, endPos));
+                case PathFindingGraphType.GridSearch:
+                    StartCoroutine
+                (FindPath(startPos, endPos));
                     break;
                 case PathFindingGraphType.PoVSearch:
                     StartCoroutine(FindPoVPath(startPos, endPos));
@@ -89,70 +108,70 @@ namespace Assets.Script.AI.PathFinding
             //             add neighbor to open 
             //
             Node startNode = nodeGraph.QuantizePosition(startPos); // get node relative to the startPos
-            
+
             Node targetNode = nodeGraph.QuantizePosition(targetPos); //get target node relative to the start pos
-    
-      
+
+
             Vector3[] wayPoints = new Vector3[0];
             bool pathSuccess = false;
 
-           // if (startNode.IsWalkable && targetNode.IsWalkable)
-            
-                //according to the A* algorithm, we need an open list and closed list
-                // List<Node> openList = new List<Node>();
-                Heap<Node> openHeap = new Heap<Node>(grid.MaxSize);
-                HashSet<Node> closedSet = new HashSet<Node>();//we need to be able to check if the list contains a specific node, so a hashset or dictionary set should suffice
-                openHeap.Add(startNode);
-                // openList.Add(startNode);
+            // if (startNode.IsWalkable && targetNode.IsWalkable)
+
+            //according to the A* algorithm, we need an open list and closed list
+            // List<Node> openList = new List<Node>();
+            Heap<Node> openHeap = new Heap<Node>(grid.MaxSize);
+            HashSet<Node> closedSet = new HashSet<Node>();//we need to be able to check if the list contains a specific node, so a hashset or dictionary set should suffice
+            openHeap.Add(startNode);
+            // openList.Add(startNode);
 
 
-                while (openHeap.Count > 0)
+            while (openHeap.Count > 0)
+            {
+                //Node currentNode = openList[0];
+
+                /*  for (int i = 1; i < openList.Count; i++) 
+            {
+
+                if (openList[i].FCost < currentNode.FCost || openList[i].FCost == currentNode.FCost && openList[i].HCost < currentNode.HCost)
                 {
-                    //Node currentNode = openList[0];
+                    currentNode = openList[i];
+                }
+                openList.Remove(currentNode);
+                closedSet.Add(currentNode);
+            }*/
 
-                    /*  for (int i = 1; i < openList.Count; i++) 
+                Node currentNode = openHeap.RemoveFirstItem();
+                closedSet.Add(currentNode);
+                if (currentNode == targetNode) //path has been found
                 {
 
-                    if (openList[i].FCost < currentNode.FCost || openList[i].FCost == currentNode.FCost && openList[i].HCost < currentNode.HCost)
-                    {
-                        currentNode = openList[i];
-                    }
-                    openList.Remove(currentNode);
-                    closedSet.Add(currentNode);
-                }*/
 
-                    Node currentNode = openHeap.RemoveFirstItem();
-                    closedSet.Add(currentNode);
-                    if (currentNode == targetNode) //path has been found
-                    {
-
-
-                        pathSuccess = true;
-                        break; //exit out of the loop
-                    }
-
-                    //     foreach neighbour of the current node
-                    //     if neighbour is not traversable or is in CLOSED
-                    //        skip to the next neighbour
-                    foreach (Node neighbour in nodeGraph.GetNeighbours(currentNode))
-                    {
-                        if ( closedSet.Contains(neighbour))
-                            continue;
-                        int newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour,heuristicType);
-                        if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
-                        {
-                            neighbour.GCost = newMovementCostToNeighbour;
-                            neighbour.HCost = GetDistance(neighbour, targetNode, heuristicType);
-                            neighbour.ParentNode = currentNode;
-                            if (!openHeap.Contains(neighbour))
-                                openHeap.Add(neighbour);
-                            else openHeap.UpdateItem(neighbour);
-                        }
-                    }
+                    pathSuccess = true;
+                    break; //exit out of the loop
                 }
 
+                //     foreach neighbour of the current node
+                //     if neighbour is not traversable or is in CLOSED
+                //        skip to the next neighbour
+                foreach (Node neighbour in nodeGraph.GetNeighbours(currentNode))
+                {
+                    if (closedSet.Contains(neighbour))
+                        continue;
+                    int newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour, heuristicType);
+                    if (newMovementCostToNeighbour < neighbour.GCost || !openHeap.Contains(neighbour))
+                    {
+                        neighbour.GCost = newMovementCostToNeighbour;
+                        neighbour.HCost = GetDistance(neighbour, targetNode, heuristicType);
+                        neighbour.ParentNode = currentNode;
+                        if (!openHeap.Contains(neighbour))
+                            openHeap.Add(neighbour);
+                        else openHeap.UpdateItem(neighbour);
+                    }
+                }
+            }
 
-            
+
+
             yield return null;
             if (pathSuccess)
             {
@@ -161,6 +180,8 @@ namespace Assets.Script.AI.PathFinding
 
             requestmanager.FinishProcessingPath(wayPoints, pathSuccess);
         }
+
+       
         /// <summary>
         /// this is an implementation of the A* path finding algorithm. 
         /// </summary>
@@ -189,8 +210,8 @@ namespace Assets.Script.AI.PathFinding
             //
             Node startNode = grid.QuantizePosition(startPos); // get node relative to the startPos
             Node targetNode = grid.QuantizePosition(targetPos); //get target node relative to the start pos
+          //  text.text = "Start node info "+startNode.ToString()+"\n target node "+targetNode.ToString();
 
-      
             Vector3[] wayPoints = new Vector3[0];
             bool pathSuccess = false;
 
@@ -256,7 +277,7 @@ namespace Assets.Script.AI.PathFinding
             {
                 wayPoints = RetracePath(startNode, targetNode);
             }
-
+           
             requestmanager.FinishProcessingPath(wayPoints, pathSuccess);
 
         }
@@ -272,7 +293,10 @@ namespace Assets.Script.AI.PathFinding
                 path.Add(currenNode);
                 currenNode = currenNode.ParentNode;
             }
-            
+            if (path.Count == 1)
+            {
+                path.Add(startNode);
+            }
             Vector3[] wayPoints = SimplifyPath(path);
             Array.Reverse(wayPoints);
             //grid.Path = path;
@@ -283,16 +307,19 @@ namespace Assets.Script.AI.PathFinding
         {
             List<Vector3> wayPoints = new List<Vector3>();
             Vector2 directionOld = Vector2.zero;
-            switch (pathType){
+            switch (pathType)
+            {
                 case AStarPathFinding.PathFindingGraphType.GridSearch:
-            for (int i = 1; i < path.Count; i++){
-                Vector2 directionNew = new Vector2(path[i - 1].PositionX - path[i].PositionX,
-                    path[i - 1].PositionY - path[i].PositionY);
-                if (directionNew != directionOld){
-                    wayPoints.Add(path[i].WorldPosition);
-                }
-                directionOld = directionNew;
-            }
+                    for (int i = 1; i < path.Count; i++)
+                    {
+                        Vector2 directionNew = new Vector2(path[i - 1].PositionX - path[i].PositionX,
+                            path[i - 1].PositionY - path[i].PositionY);
+                        if (directionNew != directionOld)
+                        {
+                            wayPoints.Add(path[i].WorldPosition);
+                        }
+                        directionOld = directionNew;
+                    }
                     break;
                 case AStarPathFinding.PathFindingGraphType.PoVSearch:
                     for (int i = 0; i < path.Count; i++)
@@ -303,36 +330,57 @@ namespace Assets.Script.AI.PathFinding
 
             }
 
-    return wayPoints.ToArray();
+            return wayPoints.ToArray();
         }
 
         //diagonal moves cost 14
         //horizonal moves cost 10
-       public static int GetDistance(Node A, Node B, HeuristicType heuristicType)
+        public  int GetDistance(Node A, Node B, HeuristicType heuristicType)
         {
-            int returner=0;
+            int returner = 0;
             switch (heuristicType)
             {
                 case HeuristicType.EuclideanDistance:
-                   
-                    Vector2 posA = new Vector2(A.WorldPosition.x,A.WorldPosition.z);
-                    Vector2 posB = new Vector2(B.WorldPosition.x,B.WorldPosition.z);
-                    //float distance = Vector2.Distance(posA, posB);
-                    float distance = Vector2.SqrMagnitude(posB - posA);
-                    returner =  (int) distance;
 
+
+                    returner =ComputeEuclideanDistance(A, B);
 
                     break;
 
                 case HeuristicType.nullHeuristic:
                     
                     break;
-                    case HeuristicType.clusterHeuristic:
-
-                    returner= 1;
+                case HeuristicType.clusterHeuristic:
+                  
+                    int indexA = A._inCluster.Node.Id;
+                    int indexB = B._inCluster.node.Id;
+                    if (indexA == indexB)
+                        returner = ComputeEuclideanDistance(A, B);
+                    else
+                        returner = (int)lookUpTable[indexA, indexB];
+                    
+                    
                     break;
             }
             return returner;
+        }
+
+       public static int ComputeEuclideanDistance(Node A, Node B)
+        {
+            int returner = 0;
+           int distanceX = Mathf.Abs(A.PositionX - B.PositionX);
+           int distanceY = Mathf.Abs(A.PositionY - B.PositionY);
+           if (distanceX > distanceY)
+               return 14*distanceY + 10*(distanceX - distanceY);
+           else
+               return 14*distanceX + 10*(distanceY - distanceX);
+            Vector2 posA = new Vector2(A.WorldPosition.x, A.WorldPosition.z);
+            Vector2 posB = new Vector2(B.WorldPosition.x, B.WorldPosition.z);
+            //float distance = Vector2.Distance(posA, posB);
+            float distance = Vector2.SqrMagnitude(posB - posA);
+            returner = (int)distance;
+           return returner;
+           
         }
         #endregion
 

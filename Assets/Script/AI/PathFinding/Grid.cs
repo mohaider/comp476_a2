@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Xml;
 namespace Assets.Script.AI.PathFinding
 {/**
@@ -11,14 +12,20 @@ namespace Assets.Script.AI.PathFinding
     public class Grid : MonoBehaviour
     {
 
-      //  public List<Node> _gridAsList;
-        private List<Cluster> _clusterList; 
+        //  public List<Node> _gridAsList;
+        private List<Cluster> _clusterList;
         public bool displayGridGizmos;
         #region class variables and properties
-        [SerializeField]
-        private bool ShowAllGizmos = false;
+
+        public bool instantiateCaps;
+        public GameObject capsule;
+
+        public Color WalkableColor;
+        public Color UnwalkableColor;
+        public float cubeOffSet;
+
         public Node[,] grid; //grid representation
-        
+
         private List<Node> _path;
         private int _totalNodes;
         public Cluster[] clusters;
@@ -37,7 +44,8 @@ namespace Assets.Script.AI.PathFinding
         [SerializeField]
         private LayerMask UnwalkableMask;
 
-        [SerializeField] private LayerMask ExitNodeMask;
+        [SerializeField]
+        private LayerMask ExitNodeMask;
 
         [SerializeField]
         private int _gridSizeX, _gridSizeY;
@@ -102,7 +110,7 @@ namespace Assets.Script.AI.PathFinding
             _gridSizeX = Mathf.RoundToInt(worldSize.x / _nodeDiameter);
             _gridSizeY = Mathf.RoundToInt(worldSize.y / _nodeDiameter);
             CreateGrid();
-            
+
             //    gridtoFile = new GridToFile();
             //    gridtoFile.nodes = grid;
             // gridtoFile.Save(System.IO.Path.Combine(Application.persistentDataPath, "grid.xml"));
@@ -133,9 +141,11 @@ namespace Assets.Script.AI.PathFinding
                                             Vector3.forward * (y * _nodeDiameter + _nodeRadius);
                     //check to see if current position is walkable
                     bool isWalkable = !Physics.CheckSphere(worldPosition, _nodeRadius, UnwalkableMask);
-                  //  bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
-                  //  Debug.
+                    //  bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
+                    //  Debug.
                     grid[x, y] = new Node(isWalkable, worldPosition, x, y);
+                    if(grid[x,y].IsWalkable && instantiateCaps)
+                        Instantiate(capsule, worldPosition, Quaternion.identity);
                     //grid[x, y].isExitNode = exitNode;
                     SetNodeToCluster(grid[x, y]);
                     grid[x, y].Id = id++;
@@ -144,42 +154,92 @@ namespace Assets.Script.AI.PathFinding
             _totalNodes = id;
         }
 
-       
+
 
         public void SetNodeToCluster(Node n)
+        {
+            float offset = -0.1f;
+            do
+            {
+                offset += 0.1f;
+                for (int k = 0; k < clusters.Length; k++)
+                {
+
+                    if (n.WorldPosition.x > clusters[k].Xbounds.x - offset && n.WorldPosition.x < clusters[k].Xbounds.y + offset
+                        && n.WorldPosition.z > clusters[k].Zbounds.x - offset && n.WorldPosition.z < clusters[k].Zbounds.y + offset)
+                    {
+                        if (n._inCluster == null)
+                        {
+                            //cluster group is not set 
+                            n._inCluster = clusters[k];
+                            if (n.AssociatedPovNode != null)
+                                clusters[k].PovNodeList.Add(n);
+                            else
+                                clusters[k].NodeList.Add(n);
+                        }
+                        else if (n._inCluster.isSubCluster) //node is a sub cluster
+                            continue;
+                        else if (!n._inCluster.isSubCluster)
+                        {
+                            // the node is in a cluster but not a subcluster. Subclusters takes precedence.
+                            if (n.AssociatedPovNode != null)
+                            {
+                                n._inCluster.PovNodeList.Remove(n);
+                                n._inCluster = clusters[k];
+                                clusters[k].PovNodeList.Add(n);
+                            }
+                            else
+                            {
+                                n._inCluster.NodeList.Remove(n);
+                                n._inCluster = clusters[k];
+                                clusters[k].NodeList.Add(n);
+                            }
+                        }
+
+                    }
+                }
+            } while (n._inCluster == null);
+        }
+
+
+        public void RecastNodeToCluster(Node n, float offset)
         {
 
             for (int k = 0; k < clusters.Length; k++)
             {
-                if (n.WorldPosition.x > clusters[k].Xbounds.x && n.WorldPosition.x < clusters[k].Xbounds.y
-                    && n.WorldPosition.z > clusters[k].Zbounds.x && n.WorldPosition.z < clusters[k].Zbounds.y)
+                if (n.WorldPosition.x > clusters[k].Xbounds.x - offset && n.WorldPosition.x < clusters[k].Xbounds.y + offset
+                    && n.WorldPosition.z > clusters[k].Zbounds.x - offset && n.WorldPosition.z < clusters[k].Zbounds.y + offset)
                 {
-                    if (n._inCluster == null){ //cluster group is not set 
+                    if (n._inCluster == null)
+                    { //cluster group is not set 
                         n._inCluster = clusters[k];
-                        if(n.AssociatedPovNode != null)
+                        if (n.AssociatedPovNode != null)
                             clusters[k].PovNodeList.Add(n);
                         else
                             clusters[k].NodeList.Add(n);
-                    } else if (n._inCluster.isSubCluster) //node is a sub cluster
+                    }
+                    else if (n._inCluster.isSubCluster) //node is a sub cluster
                         continue;
                     else if (!n._inCluster.isSubCluster)
                     {                         // the node is in a cluster but not a subcluster. Subclusters takes precedence.
-                        if (n.AssociatedPovNode != null){
+                        if (n.AssociatedPovNode != null)
+                        {
                             n._inCluster.PovNodeList.Remove(n);
                             n._inCluster = clusters[k];
                             clusters[k].PovNodeList.Add(n);
-                        } else {
+                        }
+                        else
+                        {
                             n._inCluster.NodeList.Remove(n);
                             n._inCluster = clusters[k];
                             clusters[k].NodeList.Add(n);
                         }
-                    } 
+                    }
 
                 }
             }
         }
 
-      
 
 
         /// <summary>
@@ -269,7 +329,7 @@ namespace Assets.Script.AI.PathFinding
         public int[,] CreateAdjacencyMatrix()
         {
             int[,] adjacencyMatrix = new int[_totalNodes, _totalNodes];
-            for (int i=0; i < _totalNodes ; i++)
+            for (int i = 0; i < _totalNodes; i++)
             {
                 for (int j = 0; j < _totalNodes; j++)
                 {
@@ -289,7 +349,7 @@ namespace Assets.Script.AI.PathFinding
                         adjacencyMatrix[n.Id, neighbors[k].Id] = 1;
                     }
                 }
-     
+
             }
             return adjacencyMatrix;
         }
@@ -301,21 +361,21 @@ namespace Assets.Script.AI.PathFinding
 
         void OnDrawGizmos()
         {
-            Gizmos.DrawWireCube(transform.position, new Vector3(worldSize.x, 1f, worldSize.y));
+            Gizmos.DrawWireCube(transform.position, new Vector3(worldSize.x, cubeOffSet, worldSize.y));
 
             if (grid != null && displayGridGizmos == true)
             {
 
                 foreach (Node n in grid)
                 {
-                    Gizmos.color = (n.IsWalkable ? Color.white : Color.red);
+                    Gizmos.color = (n.IsWalkable ? WalkableColor : UnwalkableColor);
                     int id = n.Id;
-                    if (id == 0||id ==1||id==2||id==10)
-                        Gizmos.color = Color.blue;
-                    Gizmos.DrawCube(n.WorldPosition, Vector3.one * (_nodeDiameter - .1f));
+                    Vector3 cubePos = new Vector3(n.WorldPosition.x,cubeOffSet,n.WorldPosition.z);
+                    Gizmos.DrawCube(cubePos, Vector3.one * (_nodeDiameter - .1f));
 
                 }
             }
+
         }
 
         #endregion

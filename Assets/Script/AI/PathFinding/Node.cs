@@ -140,6 +140,10 @@ namespace Assets.Script.AI.PathFinding
             return -comparer;
         }
 
+        public string ToString()
+        {
+            return "ID: "+Id+", world position: "+WorldPosition+", xpos: "+PositionX+",ypos: "+PositionY;
+        }
    
         #endregion
 
