@@ -3,17 +3,25 @@ using Assets.Script.AI.PathFinding;
 
 public class NavNodeScript : MonoBehaviour
 {
-
+    public bool showNodes = false;
     public Grid grid;
     public PoVNodeGraph povGraph ;
     public CreateClusterLookUpTable clusterLookup;
-	// Use this for initialization
+    private Transform[] OrangyNodes;
+
+    public bool ShowNodes
+    {
+        get { return showNodes; }
+        set { showNodes = value; }
+    }
+
+    // Use this for initialization
 	void Awake ()
 	{
 	    GameObject AStar = GameObject.FindGameObjectWithTag("gridMaker");
 	    grid = AStar.GetComponent<Grid>();
 	    povGraph = AStar.GetComponent<PoVNodeGraph>();
-        Transform[] OrangyNodes = GetComponentsInChildren<Transform>();
+         OrangyNodes = GetComponentsInChildren<Transform>();
 	    int id = grid.TotalNodes + 1;
 	    foreach (Transform t in OrangyNodes)
 	    {
@@ -30,18 +38,31 @@ public class NavNodeScript : MonoBehaviour
 	            n.AssociatedPovNode = t.gameObject.GetComponent<PoVNodes>();
 	            n.isExitNode= t.tag == "NavNodeExit";
                 povGraph.InsertIntoPoVList(n);
+                t.gameObject.renderer.enabled = false;
 	        }
 	    }
-	    ConstructPoVLookUpTable();
+	    
 	}
 
-    private void ConstructPoVLookUpTable()
+    public void ToggleView()
     {
-      //  clusterLookup.ConstructLookupTables();
+        showNodes = !showNodes;
+        foreach (Transform t in OrangyNodes)
+        {
+            if (t.gameObject.renderer )
+                t.gameObject.renderer.enabled = showNodes;
+        }
+
     }
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    internal void ToggleView(bool isDisplayed)
+    {
+        foreach (Transform t in OrangyNodes)
+        {
+            if (t.gameObject.renderer)
+                t.gameObject.renderer.enabled = isDisplayed;
+        }
+    }
+
+
+   
 }

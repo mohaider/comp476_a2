@@ -19,6 +19,9 @@ namespace Assets.Script.AI.PathFinding
 
         public bool instantiateCaps;
         public GameObject capsule;
+        private List<GameObject> capsules;
+        public Material capsuleWhite;
+        public Material capsuleRed;
 
         public Color WalkableColor;
         public Color UnwalkableColor;
@@ -101,11 +104,18 @@ namespace Assets.Script.AI.PathFinding
             set { _totalNodes = value; }
         }
 
+        public bool DisplayGridGizmos
+        {
+            get { return displayGridGizmos; }
+            set { displayGridGizmos = value; }
+        }
+
         #endregion
         #region UnityFunctions
 
         void Awake()
         {
+            capsules = new List<GameObject>();
             _nodeDiameter = _nodeRadius * 2;
             _gridSizeX = Mathf.RoundToInt(worldSize.x / _nodeDiameter);
             _gridSizeY = Mathf.RoundToInt(worldSize.y / _nodeDiameter);
@@ -144,8 +154,21 @@ namespace Assets.Script.AI.PathFinding
                     //  bool exitNode = Physics.CheckSphere(worldPosition, _nodeRadius, ExitNodeMask);
                     //  Debug.
                     grid[x, y] = new Node(isWalkable, worldPosition, x, y);
-                    if(grid[x,y].IsWalkable && instantiateCaps)
-                        Instantiate(capsule, worldPosition, Quaternion.identity);
+                    if (grid[x, y].IsWalkable )
+                    {
+                        GameObject obj = (GameObject)Instantiate(capsule, worldPosition, Quaternion.identity);
+                        obj.renderer.material = capsuleWhite;
+                        obj.renderer.enabled = false;
+                        capsules.Add(obj);
+
+                    }
+                    else if (!grid[x, y].IsWalkable )
+                    {
+                        GameObject obj = (GameObject)Instantiate(capsule, worldPosition, Quaternion.identity);
+                        obj.renderer.material = capsuleRed;
+                        obj.renderer.enabled = false;
+                        capsules.Add(obj);
+                    }
                     //grid[x, y].isExitNode = exitNode;
                     SetNodeToCluster(grid[x, y]);
                     grid[x, y].Id = id++;
@@ -354,9 +377,25 @@ namespace Assets.Script.AI.PathFinding
             return adjacencyMatrix;
         }
 
+        public void ToggleGridView()
+        {
+            displayGridGizmos = !displayGridGizmos;
+            foreach (GameObject obj in capsules)
+            {
+                obj.renderer.enabled = displayGridGizmos;
+            }
+        }
         #endregion
 
 
+        internal void ToggleGridView(bool isDisplayed)
+        {
+            displayGridGizmos = isDisplayed;
+            foreach (GameObject obj in capsules)
+            {
+                obj.renderer.enabled = isDisplayed;
+            }
+        }
         #region gizmos
 
         void OnDrawGizmos()
@@ -390,5 +429,7 @@ namespace Assets.Script.AI.PathFinding
                 c.SetUpExitNodesList();
             }
         }
+
+
     }
 }

@@ -29,7 +29,7 @@ public class Unit : MonoBehaviour
     [SerializeField]
     private float arriveRadius;
      [SerializeField]
-   private UnityEngine.UI.Text text;
+   //private UnityEngine.UI.Text text;
 
 
 
@@ -66,7 +66,7 @@ public class Unit : MonoBehaviour
         {
             Vector3 direction = transform.position - currentWayPoint;
            // direction.y = 0;
-            text.text = "transform position is " + transform.position;
+     //       text.text = "transform position is " + transform.position;
             if (direction.magnitude < 0.1f)
             {
                 targetIndex++;

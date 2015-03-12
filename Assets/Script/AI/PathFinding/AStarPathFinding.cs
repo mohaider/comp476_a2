@@ -27,12 +27,14 @@ namespace Assets.Script.AI.PathFinding
             clusterHeuristic
         }
 
+        public UnityEngine.UI.Text HeuristicText;
         public enum PathFindingGraphType
         {
             GridSearch = 0,
             PoVSearch
         }
         public HeuristicType heuristicType = HeuristicType.EuclideanDistance;
+        private bool usingGridSearch = false;
         public PathFindingGraphType pathType = PathFindingGraphType.GridSearch;
         private Grid grid; //the game's grid
         public PoVNodeGraph nodeGraph;
@@ -57,6 +59,10 @@ namespace Assets.Script.AI.PathFinding
 
         #region unity functions
 
+        void Start()
+        {
+            HeuristicText.text = heuristicType.ToString();
+        }
         void Awake()
         {
             grid = GetComponent<Grid>();
@@ -382,6 +388,33 @@ namespace Assets.Script.AI.PathFinding
            return returner;
            
         }
+
+        public void ToggleGridOrPoV()
+        {
+            usingGridSearch = !usingGridSearch;
+
+            if(usingGridSearch)
+                pathType = PathFindingGraphType.GridSearch;
+            else 
+                pathType = PathFindingGraphType.PoVSearch;
+            
+        }
+
+        public void ToggleBetweenHeuristic()
+        {
+            int currentEnumVal = (int) heuristicType;
+            if (currentEnumVal == Enum.GetNames(typeof (HeuristicType)).Length - 1)
+            {
+                currentEnumVal = 0;
+            }
+            else
+            {
+                currentEnumVal++;
+            }
+            heuristicType = (HeuristicType)currentEnumVal;
+            HeuristicText.text = heuristicType.ToString();
+        }
+
         #endregion
 
     }

@@ -55,7 +55,7 @@ public class PathRequestManager : MonoBehaviour
         }
     }
 
-    public void FinishProcessingPath(Vector3[] path, bool success)
+    public void FinishProcessingPath(Vector3[] path, bool success)//finish processing path is fine
     {
         currentPathRequest.callback(path, success);
         text.text = "Path finished processing";
