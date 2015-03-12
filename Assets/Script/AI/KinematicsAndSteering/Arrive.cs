@@ -13,12 +13,13 @@ namespace Assets.Script.AI.KinematicsAndSteering
         public float targetRadius;
         public float slowRadius;
         public float timeToTarget = 0.1f;
+        public ObstacleAvoidance obstacleAvoidance; 
 
         public Steering steering;
 
         public void Arrival()
         {
-            Vector3 direction = target.transform.position - transform.position;
+            Vector3 direction = target.transform.position - transform.position + obstacleAvoidance.CheckForCollisions();
             direction.y = 0;
             float distance = direction.magnitude;
             float targetSpeed = 0;
@@ -51,7 +52,8 @@ namespace Assets.Script.AI.KinematicsAndSteering
         private void Awake()
         {
             steering = GetComponent<Steering>();
-           
+            obstacleAvoidance = GetComponent<ObstacleAvoidance>();
+
         }
 
         void Update()
