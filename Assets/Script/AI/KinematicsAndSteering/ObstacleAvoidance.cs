@@ -19,6 +19,7 @@ namespace Assets.Script.AI.KinematicsAndSteering
         public Ray rightRay;
         public LayerMask wallMask;
         private Vector3 targetVector3;
+        public float yOffset;
         #endregion
 
         #region unity functions
@@ -38,14 +39,14 @@ namespace Assets.Script.AI.KinematicsAndSteering
             
             Vector3 leftPoint = Quaternion.Euler(0f, leftRayAngle, 0f) * (transform.forward );
             Vector3 rightPoint = Quaternion.Euler(0f, rightRayAngle, 0f) * (transform.forward );
-            leftPoint += transform.position;
-            rightPoint += transform.position;
-            if (!Physics.Raycast(transform.position, transform.forward, out hit[1], avoidDistance, wallMask)
+            leftPoint += transform.position+Vector3.up*yOffset;
+            rightPoint += transform.position +Vector3.up* yOffset;
+            if (!Physics.Raycast(transform.position + Vector3.up * yOffset, transform.forward + Vector3.up * yOffset, out hit[1], avoidDistance, wallMask)
                 &&
-                !Physics.Raycast(transform.position, leftPoint - transform.position, out hit[0], avoidDistance,
+                !Physics.Raycast(transform.position + Vector3.up * yOffset, leftPoint - transform.position + Vector3.up * yOffset, out hit[0], avoidDistance,
                     wallMask)
                 &&
-                !Physics.Raycast(transform.position, rightPoint - transform.position, out hit[2], avoidDistance,
+                !Physics.Raycast(transform.position + Vector3.up * yOffset, rightPoint - transform.position + Vector3.up * yOffset, out hit[2], avoidDistance,
                     wallMask))
                 return Vector3.zero;
 
@@ -54,10 +55,12 @@ namespace Assets.Script.AI.KinematicsAndSteering
             {
                 if (hit[i].collider != null)
                 {
+                    
                     colHit = hit[i];
                     break;
                 }
             }
+            print(colHit.point + colHit.normal*avoidDistance);
              return colHit.point + colHit.normal*avoidDistance;
 
 
@@ -71,18 +74,18 @@ namespace Assets.Script.AI.KinematicsAndSteering
         void OnDrawGizmos()
         {
             Gizmos.color = Color.red;
-            Vector3 centerPoint = transform.position + transform.forward*avoidDistance;
+            Vector3 centerPoint = transform.position + transform.forward * avoidDistance + Vector3.up * yOffset;
             
             Vector3 leftPoint = Quaternion.Euler(0f, leftRayAngle, 0f) * (transform.forward*avoidDistance);
-            leftPoint += transform.position;
+            leftPoint += transform.position + Vector3.up * yOffset; ;
 
             Vector3 rightPoint = Quaternion.Euler(0f,  rightRayAngle, 0f) * (transform.forward * avoidDistance);
-            rightPoint += transform.position;
-            
-           
-            Gizmos.DrawLine(transform.position, centerPoint);
-            Gizmos.DrawLine(transform.position, leftPoint);
-            Gizmos.DrawLine(transform.position, rightPoint);
+            rightPoint += transform.position + Vector3.up * yOffset; ;
+
+
+            Gizmos.DrawLine(transform.position + Vector3.up * yOffset, centerPoint);
+            Gizmos.DrawLine(transform.position + Vector3.up * yOffset, leftPoint);
+            Gizmos.DrawLine(transform.position + Vector3.up * yOffset, rightPoint);
 
             
         }

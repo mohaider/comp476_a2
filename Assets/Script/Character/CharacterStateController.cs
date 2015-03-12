@@ -128,7 +128,7 @@ namespace Assets.Script.Character
                     float targetAngle = Mathf.Atan2(directionalVector3.x, directionalVector3.z) * Mathf.Rad2Deg;
                     targetAngle %= 360f;
                     float currentAngle = transform.rotation.eulerAngles.y % 360;
-                    float differenceInAngles = targetAngle - currentAngle;
+                  
 
                     outputinfo = "In A.ii, difference between angles is " + difInAngles;
 

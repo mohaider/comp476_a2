@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Assets.AI.KinematicsAndSteering;
 
-namespace Assets.AI.KinematicsAndSteering
+
+namespace Assets.Script.AI.KinematicsAndSteering
 {
     public class Seek : MonoBehaviour
     {

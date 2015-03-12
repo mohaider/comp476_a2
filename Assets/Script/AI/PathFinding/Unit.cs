@@ -111,6 +111,7 @@ public class Unit : MonoBehaviour
         bool pathIsnull = (path == null);
         if (!pathIsnull)
         {
+        
             for (int i = targetIndex; i < path.Length; i++)
             {
                 Gizmos.color = lineColor;

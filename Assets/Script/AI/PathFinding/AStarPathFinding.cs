@@ -121,7 +121,7 @@ namespace Assets.Script.AI.PathFinding
             Vector3[] wayPoints = new Vector3[0];
             bool pathSuccess = false;
 
-            // if (startNode.IsWalkable && targetNode.IsWalkable)
+      
 
             //according to the A* algorithm, we need an open list and closed list
             // List<Node> openList = new List<Node>();
@@ -133,18 +133,7 @@ namespace Assets.Script.AI.PathFinding
 
             while (openHeap.Count > 0)
             {
-                //Node currentNode = openList[0];
-
-                /*  for (int i = 1; i < openList.Count; i++) 
-            {
-
-                if (openList[i].FCost < currentNode.FCost || openList[i].FCost == currentNode.FCost && openList[i].HCost < currentNode.HCost)
-                {
-                    currentNode = openList[i];
-                }
-                openList.Remove(currentNode);
-                closedSet.Add(currentNode);
-            }*/
+              
 
                 Node currentNode = openHeap.RemoveFirstItem();
                 closedSet.Add(currentNode);

@@ -5,7 +5,7 @@
  * mrhaider@gmail.com 
  */
 
-namespace Assets.AI.KinematicsAndSteering
+namespace Assets.Script.AI.KinematicsAndSteering
 {
     public class Steering : MonoBehaviour
     {
